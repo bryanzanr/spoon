@@ -10,6 +10,8 @@ namespace YimMenu
 {
 	Hooking::Hooking()
 	{
+		BaseHook::Add<Hooks::Window::WndProc>(new DetourHook("WndProc", Pointers.WndProc, Hooks::Window::WndProc));
+
 		BaseHook::Add<Hooks::RawInput::GetRawInputData>(new DetourHook("GetRawInputData", reinterpret_cast<void*>(GetProcAddress(LoadLibraryA("user32.dll"), "GetRawInputData")), Hooks::RawInput::GetRawInputData));
 
 		// BaseHook::Add<Hooks::Anticheat::QueueDependency>(new DetourHook("QueueDependency", Pointers.QueueDependency, Hooks::Anticheat::QueueDependency));
@@ -26,6 +28,7 @@ namespace YimMenu
 		BaseHook::Add<Hooks::Script::ScriptVM>(new DetourHook("ScriptVM", reinterpret_cast<void*>(Pointers.ScriptVM), Hooks::Script::ScriptVM));
 
 		BaseHook::Add<Hooks::Info::AssignPhysicalIndex>(new DetourHook("AssignPhysicalIndex", Pointers.AssignPhysicalIndex, Hooks::Info::AssignPhysicalIndex));
+		BaseHook::Add<Hooks::Info::NetworkPlayerMgrInit>(new DetourHook("NetworkPlayerMgrInit", Pointers.NetworkPlayerMgrInit, Hooks::Info::NetworkPlayerMgrInit));
 		BaseHook::Add<Hooks::Info::NetworkPlayerMgrShutdown>(new DetourHook("NetworkPlayerMgrShutdown", Pointers.NetworkPlayerMgrShutdown, Hooks::Info::NetworkPlayerMgrShutdown));
 
 		BaseHook::Add<Hooks::Network::ReceiveNetMessage>(new DetourHook("ReceiveNetMessage", Pointers.ReceiveNetMessage, Hooks::Network::ReceiveNetMessage));

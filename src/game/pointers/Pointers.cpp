@@ -28,6 +28,17 @@ namespace YimMenu
 
 		auto scanner = PatternScanner(gta5);
 
+		constexpr auto swapchainPtrn = Pattern<"72 C7 EB 02 31 C0 8B 0D">("IDXGISwapChain");
+		scanner.Add(swapchainPtrn, [this](PointerCalculator ptr) {
+			CommandQueue = ptr.Add(0x1A).Add(3).Rip().As<ID3D12CommandQueue**>();
+			SwapChain = ptr.Add(0x21).Add(3).Rip().As<IDXGISwapChain1**>();
+		});
+
+		constexpr auto wndProcPtrn = Pattern<"3D 85 00 00 00 0F 87 2D 02 00 00">("WndProc");
+		scanner.Add(wndProcPtrn, [this](PointerCalculator ptr) {
+			WndProc = ptr.Sub(0x4F).As<PVOID>();
+		});
+
 		constexpr auto screenResPtrn = Pattern<"75 39 0F 57 C0 F3 0F 2A 05">("ScreenRes");
 		scanner.Add(screenResPtrn, [this](PointerCalculator ptr) {
 			ScreenResX = ptr.Add(0x5).Add(4).Rip().As<std::uint32_t*>();
@@ -79,6 +90,11 @@ namespace YimMenu
 		constexpr auto assignPhysicalIndexPtrn = Pattern<"41 8D 47 01 3C 20 0F 87 68 01 00 00">("AssignPhysicalIndex");
 		scanner.Add(assignPhysicalIndexPtrn, [this](PointerCalculator ptr) {
 			AssignPhysicalIndex = ptr.Sub(0x13).As<PVOID>();
+		});
+
+		constexpr auto networkPlayerManagerInitPtrn = Pattern<"41 56 56 57 55 53 48 83 EC 30 4C 89 CF 45 89 C6 48 89 D3">("NetworkPlayerMgrInit");
+		scanner.Add(networkPlayerManagerInitPtrn, [this](PointerCalculator ptr) {
+			NetworkPlayerMgrInit = ptr.As<PVOID>();
 		});
 
 		constexpr auto networkPlayerManagerShutdownPtrn = Pattern<"84 C0 0F 84 88 00 00 00 4C 89 F9 E8">("NetworkPlayerMgrShutdown");
