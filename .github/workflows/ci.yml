@@ -46,7 +46,9 @@ jobs:
           del YimMenuV2-dev-*.dll -ErrorAction SilentlyContinue
           del YimMenuV2-dev-*.pdb -ErrorAction SilentlyContinue
           ren YimMenuV2.dll YimMenuV2-dev-${{github.sha}}.dll
-          ren YimMenuV2.pdb YimMenuV2-dev-${{github.sha}}.pdb
+          if (Test-Path -Path YimMenuV2.pdb) {
+            ren YimMenuV2.pdb YimMenuV2-dev-${{github.sha}}.pdb
+          }
         working-directory: build/
 
       - name: Upload Artifact
@@ -84,7 +86,7 @@ jobs:
         run: |
           rm -f libYimMenuV2-dev-*.dll libYimMenuV2-dev-*.pdb
           mv libYimMenuV2.dll libYimMenuV2-dev-${{github.sha}}.dll
-          mv libYimMenuV2.pdb libYimMenuV2-dev-${{github.sha}}.pdb
+          if [ -f libYimMenuV2.pdb ]; then mv libYimMenuV2.pdb libYimMenuV2-dev-${{github.sha}}.pdb; fi
         working-directory: build/
 
       - name: Upload Artifact
