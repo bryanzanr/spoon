@@ -10,9 +10,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check_recent_commit:
+    runs-on: ubuntu-latest
+    name: Check Recent Commit
+    outputs:
+      should_run: ${{ steps.should_run.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: should_run
+        name: Check if a commit was made in the last 24 hours
+        run: |
+          if [ -z "$(git rev-list --since='24 hours ago' --all)" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build_nightly:
     runs-on: windows-latest
     name: Build Nightly
+    needs: check_recent_commit
+    if: github.event_name == 'workflow_dispatch' || needs.check_recent_commit.outputs.should_run == 'true'
     outputs:
       full_sha: ${{ steps.var.outputs.full_sha }}
       short_sha: ${{ steps.var.outputs.short_sha }}
