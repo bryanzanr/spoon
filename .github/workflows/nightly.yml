@@ -10,6 +10,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check_nightly_commit:
+    runs-on: ubuntu-latest
+    name: Check if nightly release is out of date
+    outputs:
+      should_run: ${{ steps.compare.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: compare
+        name: Compare current commit with nightly release tag
+        shell: bash
+        run: |
+          current_sha="$(git rev-parse HEAD)"
+
+          if git fetch --no-tags origin refs/tags/nightly; then
+            nightly_sha="$(git rev-parse 'FETCH_HEAD^{commit}')"
+            echo "Current commit: $current_sha"
+            echo "Nightly release commit: $nightly_sha"
+
+            if [ "$current_sha" = "$nightly_sha" ]; then
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              echo "Nightly release already points to the current commit; skipping."
+            else
+              echo "should_run=true" >> "$GITHUB_OUTPUT"
+              echo "Nightly release is out of date; build is required."
+            fi
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "No nightly tag found; build is required."
+          fi
   check_recent_commit:
     runs-on: ubuntu-latest
     name: Check Recent Commit
@@ -30,8 +60,8 @@ jobs:
   build_nightly:
     runs-on: windows-2022
     name: Build Nightly
-    needs: check_recent_commit
-    if: github.event_name == 'workflow_dispatch' || needs.check_recent_commit.outputs.should_run == 'true'
+    needs: check_nightly_commit
+    if: needs.check_nightly_commit.outputs.should_run == 'true'
     outputs:
       full_sha: ${{ steps.var.outputs.full_sha }}
       short_sha: ${{ steps.var.outputs.short_sha }}
@@ -86,7 +116,10 @@ jobs:
   recreate_release:
     runs-on: ubuntu-latest
     name: Recreate Release
-    needs: build_nightly
+    needs:
+      - check_nightly_commit
+      - build_nightly
+    if: needs.check_nightly_commit.outputs.should_run == 'true'
     steps:
       - uses: actions/checkout@v4
 
